@@ -3,9 +3,11 @@ import pyautogui
 import mediapipe as mp
 import psutil
 from threading import Thread
+import webbrowser
 
 class GestureRecognition:
     def __init__(self):
+
         self.WIDTH, self.HEIGHT = pyautogui.size()
         self.cap = None
         self.mp_hands = mp.solutions.hands
@@ -52,10 +54,12 @@ class GestureRecognition:
                         'y': i.y,
                     })
 
+                # Управление мышью (передвижение)
                 if (keypoint[8]['y'] < keypoint[5]['y']
                         and keypoint[8]['x'] > keypoint[4]['x']
                         and keypoint[16]['y'] > keypoint[13]['y']
                         and keypoint[20]['y'] > keypoint[17]['y']
+
                 ):
                     self.time = 0
                     hand_gesture = "other"
@@ -72,6 +76,8 @@ class GestureRecognition:
                         pyautogui.click()
                         pyautogui.sleep(0.5)
 
+
+                # Повышение громкости
                 elif (
                         keypoint[8]['y'] < keypoint[5]['y']
                         and keypoint[12]['y'] > keypoint[9]['y']
@@ -83,6 +89,7 @@ class GestureRecognition:
                     print(self.time)
                     hand_gesture = 'pointing up'
 
+                # Понижение громкости
                 elif (
                         keypoint[8]['y'] > keypoint[5]['y']
                         and keypoint[8]['y'] > keypoint[7]['y']
@@ -95,6 +102,7 @@ class GestureRecognition:
                     print(self.time)
                     hand_gesture = 'pointing down'
 
+                # Открытие музыкального проигрывателя
                 elif (
                         keypoint[8]['y'] < keypoint[5]['y']
                         and keypoint[8]['y'] < keypoint[7]['y']
@@ -106,6 +114,7 @@ class GestureRecognition:
                 ):
                     hand_gesture = 'wmp'
 
+                # Старт/стоп проигрывания
                 elif (
                         keypoint[8]['y'] < keypoint[5]['y']
                         and keypoint[8]['y'] < keypoint[7]['y']
@@ -118,6 +127,58 @@ class GestureRecognition:
                     self.time += 1
                     print(self.time)
                     hand_gesture = 'stop music'
+
+                # Открытие поисковика
+                elif (
+                        keypoint[4]['y'] < keypoint[3]['y']
+                        and keypoint[5]['y'] < keypoint[9]['y']
+                        and keypoint[8]['x'] > keypoint[6]['x']
+                        and keypoint[12]['x'] > keypoint[10]['x']
+                        and keypoint[16]['x'] > keypoint[14]['x']
+                        and keypoint[20]['x'] > keypoint[18]['x']
+                ):
+                    self.time += 1
+                    print(self.time)
+                    hand_gesture = 'browser'
+
+                # Открытие экранной клавиатуры
+                elif (
+                        keypoint[8]['y'] < keypoint[5]['y']
+                        and keypoint[12]['y'] < keypoint[9]['y']
+                        and keypoint[16]['y'] > keypoint[14]['y']
+                        and keypoint[20]['y'] > keypoint[18]['y']
+                ):
+                    self.time += 1
+                    print(self.time)
+                    hand_gesture = 'keyboard'
+
+                elif (
+                        keypoint[20]['x'] > keypoint[16]['x']
+                        and keypoint[16]['x'] > keypoint[12]['x']
+                        and keypoint[8]['y'] > keypoint[6]['y']
+                        and keypoint[0]['y'] > keypoint[1]['y']
+                        and keypoint[12]['y'] < keypoint[11]['y']
+                        and keypoint[16]['y'] < keypoint[15]['y']
+                        and keypoint[20]['y'] < keypoint[19]['y']
+
+                ):
+                    self.time += 1
+                    print(self.time)
+                    hand_gesture = 'screenshot'
+
+                elif (
+                        keypoint[4]['x'] > keypoint[3]['x']
+                        and keypoint[6]['x'] < keypoint[14]['x']
+                        and keypoint[6]['y'] < keypoint[7]['y']
+                        and keypoint[10]['y'] < keypoint[11]['y']
+                        and keypoint[14]['y'] < keypoint[15]['y']
+                        and keypoint[18]['y'] < keypoint[19]['y']
+                        and keypoint[4]['y'] > keypoint[6]['y']
+                        and keypoint[4]['y'] < keypoint[7]['y']
+                ):
+                    self.time += 1
+                    print(self.time)
+                    hand_gesture = 'voice helper'
 
                 else:
                     self.time = 0
@@ -142,8 +203,21 @@ class GestureRecognition:
                 elif hand_gesture == 'stop music' and self.time > 30:
                     pyautogui.press('playpause')
                     self.time = 0
+                elif hand_gesture == 'browser' and self.time > 30:
+                    webbrowser.open_new_tab('https://www.google.com')
+                    self.time = 0
+                elif hand_gesture == 'keyboard' and self.time > 30:
+                    pyautogui.hotkey('ctrl', 'win', 'o')
+                    self.time = 0
+                elif hand_gesture == 'screenshot' and self.time > 30:
+                    pyautogui.hotkey('win', 'prtscr')
+                    self.time = 0
+                elif hand_gesture == 'voice helper' and self.time > 30:
+                    pyautogui.hotkey('win', 'h')
+                    self.time = 0
 
-                self.display_frame(frame)
+
+                # self.display_frame(frame)
 
     def gesture_recognition_thread(self):
         self.start_camera()
@@ -166,6 +240,7 @@ class GestureRecognition:
 
 # For testing the module
 if __name__ == "__main__":
+    pyautogui.FAILSAFE = False
     gesture_recognition_instance = GestureRecognition()
     gesture_recognition_instance.start_gesture_recognition_thread()
 
