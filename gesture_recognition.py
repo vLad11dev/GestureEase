@@ -4,6 +4,7 @@ import mediapipe as mp
 import psutil
 from threading import Thread
 import webbrowser
+import time
 
 class GestureRecognition:
     def __init__(self):
@@ -16,6 +17,8 @@ class GestureRecognition:
         self.mp_drawing = mp.solutions.drawing_utils
         self.WMPLAYER_OPENED = False
         self.time = 0
+        self.gesture_thread = None
+        self.stop_thread = False
 
         for proc in psutil.process_iter():
             if proc.name() == 'wmplayer.exe':
@@ -219,34 +222,4 @@ class GestureRecognition:
 
                 # self.display_frame(frame)
 
-    def gesture_recognition_thread(self):
-        self.start_camera()
 
-        while True:
-            ret, frame = self.cap.read()
-
-            if frame is None:
-                break
-
-            frame = cv2.flip(frame, 1)
-            self.gesture_recognition(frame)
-
-        self.stop_camera()
-        cv2.destroyAllWindows()
-
-    def start_gesture_recognition_thread(self):
-        gesture_thread = Thread(target=self.gesture_recognition_thread)
-        gesture_thread.start()
-
-# For testing the module
-if __name__ == "__main__":
-    pyautogui.FAILSAFE = False
-    gesture_recognition_instance = GestureRecognition()
-    gesture_recognition_instance.start_gesture_recognition_thread()
-
-    while True:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    gesture_recognition_instance.stop_camera()
-    cv2.destroyAllWindows()

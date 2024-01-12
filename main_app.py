@@ -5,7 +5,12 @@ import tkinter as tk
 from tkinter import ttk
 from threading import Thread
 from PIL import Image, ImageTk
+
+import gesture_recognition
 from gesture_recognition import GestureRecognition
+from threading import Event
+import cv2
+
 
 class HandGestureApp:
     def __init__(self, root):
@@ -83,19 +88,45 @@ class HandGestureApp:
         self.project_info.pack(pady=20)
 
         self.gesture_thread = None
+        self.stop_event = Event()
+
+        # Добавляем стиль для красной кнопки
+        style = ttk.Style()
+        style.configure("Red.TButton", padding=10, relief="flat", background="#FF0000", foreground="#FFFFFF",
+                        font=("Helvetica", 12))
 
     def start_gesture_recognition(self):
-        if self.gesture_thread is None or not self.gesture_thread.is_alive():
-            self.gesture_thread = Thread(target=self.gesture_recognition_thread)
+        if self.gesture_thread and self.gesture_thread.is_alive():
+            # Если поток запущен, устанавливаем Event для остановки потока
+            self.stop_event.set()
+            self.gesture_thread.join()  # Дожидаемся завершения потока
+            self.gesture_thread = None  # Сбрасываем переменную объекта потока
+
+            self.start_button.config(text="Запустить")
+        else:
+            # Если поток не запущен, сбрасываем Event и создаем новый поток
+            self.stop_event.clear()
+
+            self.gesture_thread = Thread(target=self.gesture_recognition_thread, args=(self.stop_event,))
             self.gesture_thread.start()
 
-    def gesture_recognition_thread(self):
-        self.gesture_recognition.start_gesture_recognition_thread()
+            self.start_button.config(text="Остановить")
 
-        while True:
+    def gesture_recognition_thread(self, stop_event):
+        self.cap = cv2.VideoCapture(0)
 
-            self.root.update_idletasks()
-            self.root.update()
+        while not stop_event.is_set():
+            ret, frame = self.cap.read()
+
+            if frame is None:
+                break
+
+            frame = cv2.flip(frame, 1)
+            self.gesture_recognition.gesture_recognition(frame)
+
+        self.gesture_recognition.stop_camera()
+        cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
