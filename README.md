@@ -7,7 +7,7 @@ GestureEase - это приложение для распознавания же
 1. Клонируйте репозиторий:
 
     ```bash
-    git clone https://github.com/your-username/GestureEase.git
+    git clone https://github.com/vLad11dev/GestureEase.git
     ```
 
 2. Перейдите в каталог проекта:
